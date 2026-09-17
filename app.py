@@ -56,54 +56,69 @@ def four_point_transform(image, pts):
 
 def detect_and_warp(image_array):
     """
-    Mendeteksi 4 marker sudut dan meratakan lembar jawaban.
+    Mendeteksi 4 marker sudut (Versi Optimal untuk Kamera).
     """
-    # 1. Konversi ke Grayscale
-    gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+    # 1. STANDARISASI RESOLUSI AWAL
+    # Kamera memiliki resolusi berbeda-beda. Kita samakan tingginya ke 1000 pixel
+    # agar filter ukuran area selalu konsisten.
+    height, width = image_array.shape[:2]
+    ratio = 1000.0 / height
+    resized_img = cv2.resize(image_array, (int(width * ratio), 1000))
     
-    # 2. Gaussian Blur untuk mengurangi noise (bayangan/tekstur kertas)
+    gray = cv2.cvtColor(resized_img, cv2.COLOR_RGB2GRAY)
+    
+    # 2. PREPROCESSING UNTUK KAMERA (Lebih tahan pantulan cahaya)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    # Gunakan Otsu Thresholding (lebih baik untuk memisahkan kertas putih dan marker hitam)
+    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
     
-    # 3. Edge Detection (Deteksi Tepi)
-    edged = cv2.Canny(blurred, 75, 200)
-
-    # 4. Temukan Kontur
-    contours, _ = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Tambahkan Morphological Close untuk menambal marker yang mungkin terbelah karena pantulan cahaya
+    kernel = np.ones((5,5), np.uint8)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
     
-    # 5. Cari 4 marker berdasarkan bentuk persegi dan luasnya
-    markers = []
+    contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    possible_markers = []
     for c in contours:
-        # Hitung keliling dan aproksimasi bentuk poligon
         peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+        # Longgarkan toleransi kelengkungan garis (dari 0.04 ke 0.05) untuk lensa kamera
+        approx = cv2.approxPolyDP(c, 0.05 * peri, True)
         
-        # Marker harus berupa persegi (4 titik) dan cukup besar
-        if len(approx) == 4 and cv2.contourArea(c) > 500:
-            # Hitung bounding box untuk memastikan bentuknya mirip persegi (rasio aspek ~1)
+        if len(approx) == 4:
             (x, y, w, h) = cv2.boundingRect(approx)
             aspect_ratio = w / float(h)
+            area = cv2.contourArea(c)
             
-            if 0.8 <= aspect_ratio <= 1.2:
-                # Simpan titik tengah dari marker tersebut
-                M = cv2.moments(c)
-                if M["m00"] != 0:
-                    cX = int(M["m10"] / M["m00"])
-                    cY = int(M["m01"] / M["m00"])
-                    markers.append([cX, cY])
+            # 3. FILTER GEOMETRI DILONGGARKAN
+            # Kemiringan kamera ditoleransi (rasio 0.6 sampai 1.4)
+            # Luas marker harus wajar (mencegah kotoran kecil atau bingkai tabel ikut terbaca)
+            if 0.6 <= aspect_ratio <= 1.4 and 200 < area < 15000:
+                possible_markers.append(c)
 
-    # Jika sistem menemukan tepat 4 marker, lakukan transformasi
-    if len(markers) == 4:
-        pts = np.array(markers, dtype="float32")
-        warped_image = four_point_transform(image_array, pts)
+    debug_image = resized_img.copy()
+    possible_markers = sorted(possible_markers, key=cv2.contourArea, reverse=True)
+    
+    if len(possible_markers) >= 4:
+        top_4 = possible_markers[:4]
+        markers = []
         
-        # Gambar titik merah di posisi marker pada gambar asli untuk visualisasi debug
-        debug_image = image_array.copy()
-        for marker in markers:
-            cv2.circle(debug_image, tuple(marker), 15, (255, 0, 0), -1)
-            
-        return debug_image, warped_image, True
+        for c in top_4:
+            M = cv2.moments(c)
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                markers.append([cX, cY])
+                cv2.circle(debug_image, (cX, cY), 15, (0, 255, 0), -1)
+        
+        pts = np.array(markers, dtype="float32")
+        
+        try:
+            warped_image = four_point_transform(resized_img, pts)
+            return debug_image, warped_image, True
+        except Exception as e:
+            return debug_image, None, False
     else:
-        return image_array, None, False
+        return debug_image, None, False
         
 def process_answers(warped_img):
     """
