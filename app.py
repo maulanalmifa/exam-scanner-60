@@ -304,7 +304,7 @@ if image_data is not None:
                 
                 with col_vis:
                     st.write("🔍 Visualisasi Pembacaan")
-                    st.image(result_img, use_column_width=True)
+                    st.image(result_img, use_container_width=True)
                     
                 # 4. TAMPILKAN HASIL
                 st.divider()
