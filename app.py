@@ -220,10 +220,10 @@ def process_answers(warped_img):
             if 150 <= area <= 900:
                 bubbles.append(c)
                 
-    # Validasi: Wajib menemukan tepat 200 bulatan (40 soal x 5 opsi)
+    # Validasi: Wajib menemukan tepat 300 bulatan (60 soal x 5 opsi)
     if len(bubbles) != 300:
         cv2.drawContours(answer_roi_color, bubbles, -1, (255, 0, 0), 2)
-        return answer_roi_thresh, answer_roi_color, False, f"Gagal mengekstrak. Terdeteksi {len(bubbles)} bulatan, seharusnya 200."
+        return answer_roi_thresh, answer_roi_color, False, f"Gagal mengekstrak. Terdeteksi {len(bubbles)} bulatan, seharusnya 300."
         
     # --- LOGIKA SORTING (MENGURUTKAN BULATAN) ---
     # Urutkan seluruh bulatan dari kiri ke kanan berdasarkan sumbu X
