@@ -224,7 +224,6 @@ st.sidebar.header("⚙️ Konfigurasi")
 csv_file = st.sidebar.file_uploader("1. Unggah CSV Kunci Jawaban", type=["csv"])
 
 # ================= SIDEBAR: BOBOT NILAI ==============
-st.sidebar.markdown("---")
 st.sidebar.header("⚖️ Pengaturan Bobot Nilai")
 bobot_benar = st.sidebar.number_input("Poin jika BENAR", value=1.0, step=0.5, format="%.1f")
 bobot_salah = st.sidebar.number_input("Poin jika SALAH", value=0.0, step=0.5, format="%.1f")
