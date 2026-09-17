@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Template LJK OMR</title>
+    <style>
+        /* Pengaturan Kertas A4 */
+        @page { size: A4; margin: 0; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #e0e0e0; display: flex; justify-content: center; }
+        .page { width: 210mm; height: 297mm; background: white; position: relative; box-sizing: border-box; padding: 30mm 20mm; }
+        
+        /* Memaksa browser mencetak warna latar hitam untuk marker */
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        
+        /* 4 Marker Sudut - Wajib Hitam Pekat */
+        .marker { width: 12mm; height: 12mm; background-color: black; position: absolute; }
+        .tl { top: 15mm; left: 15mm; }
+        .tr { top: 15mm; right: 15mm; }
+        .bl { bottom: 15mm; left: 15mm; }
+        .br { bottom: 15mm; right: 15mm; }
+        
+        /* Tata Letak Header & Identitas */
+        .header { text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px; }
+        .identitas { display: flex; justify-content: space-between; margin-bottom: 25px; }
+        .identitas-text { width: 45%; }
+        .identitas-text div { margin-bottom: 15px; border-bottom: 1px dashed black; padding-bottom: 5px; font-size: 14px; }
+        
+        /* Tata Letak Matriks (Nompes & Mapel) */
+        .identitas-matrix { width: 50%; display: flex; gap: 20px; justify-content: flex-end; }
+        .matrix-group { text-align: center; border: 1.5px solid black; padding: 10px; border-radius: 5px; }
+        .matrix-title { font-weight: bold; font-size: 11px; margin-bottom: 10px; letter-spacing: 1px; }
+        .matrix-grid { display: grid; gap: 6px; }
+        .col-5 { grid-template-columns: repeat(5, 1fr); }
+        .col-2 { grid-template-columns: repeat(2, 1fr); }
+        
+        /* Bulatan OMR */
+        .bulatan { width: 14px; height: 14px; border: 2px solid black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; margin: 0 auto; font-weight: bold; }
+        
+        /* Tata Letak Grid Jawaban (4 Kolom) */
+        .jawaban-container { display: flex; justify-content: space-between; border-top: 2px solid black; padding-top: 20px; }
+        .jawaban-col { width: 23%; }
+        .soal { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 9px; }
+        .nomor-soal { width: 22px; text-align: right; font-weight: bold; font-size: 13px; margin-right: 8px; }
+        .opsi-group { display: flex; gap: 5px; }
+        
+        @media print { body { background: white; } }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Marker OMR -->
+        <div class="marker tl"></div><div class="marker tr"></div>
+        <div class="marker bl"></div><div class="marker br"></div>
+
+        <div class="header">
+            <h2 style="margin: 0;">LEMBAR JAWABAN KOMPUTER (LJK)</h2>
+        </div>
+
+        <div class="identitas">
+            <div class="identitas-text">
+                <div><strong>NAMA LENGKAP :</strong></div>
+                <div><strong>KELAS :</strong></div>
+                <div><strong>TANGGAL UJIAN :</strong></div>
+                <div style="font-size: 12px; border: none; margin-top: 20px; line-height: 1.5;">
+                    <strong>Petunjuk Pengisian:</strong><br>
+                    1. Gunakan pensil 2B atau pulpen tinta hitam.<br>
+                    2. Hitamkan bulatan secara penuh.<br>
+                    3. Contoh: <span style="display:inline-block; width:14px; height:14px; background:black; border-radius:50%; vertical-align:middle;"></span> (Benar)
+                </div>
+            </div>
+            <div class="identitas-matrix">
+                <div class="matrix-group">
+                    <div class="matrix-title">NOMOR PESERTA</div>
+                    <div class="matrix-grid col-5" id="nompes-grid"></div>
+                </div>
+                <div class="matrix-group">
+                    <div class="matrix-title">MAPEL</div>
+                    <div class="matrix-grid col-2" id="mapel-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="jawaban-container" id="jawaban-container">
+            <!-- Grid Jawaban di-generate oleh JavaScript di bawah -->
+        </div>
+    </div>
+
+    <script>
+        // Generate Matriks Angka 0-9 untuk Nomor Peserta (5 digit)
+        const nompesGrid = document.getElementById('nompes-grid');
+        for(let i=0; i<=9; i++) {
+            for(let j=0; j<5; j++) {
+                nompesGrid.innerHTML += `<div class="bulatan">${i}</div>`;
+            }
+        }
+
+        // Generate Matriks Angka 0-9 untuk Kode Mapel (2 digit)
+        const mapelGrid = document.getElementById('mapel-grid');
+        for(let i=0; i<=9; i++) {
+            for(let j=0; j<2; j++) {
+                mapelGrid.innerHTML += `<div class="bulatan">${i}</div>`;
+            }
+        }
+
+        // Generate 60 Soal Pilihan Ganda (Bagi ke dalam 4 Kolom)
+        const jawabanContainer = document.getElementById('jawaban-container');
+        const totalSoal = 60;
+        const soalPerKolom = 15;
+        const opsi = ['A', 'B', 'C', 'D', 'E'];
+
+        for(let col=0; col<4; col++) {
+            let colHTML = `<div class="jawaban-col">`;
+            for(let row=1; row<=soalPerKolom; row++) {
+                let nomor = (col * soalPerKolom) + row;
+                colHTML += `<div class="soal"><div class="nomor-soal">${nomor}.</div><div class="opsi-group">`;
+                opsi.forEach(opt => {
+                    colHTML += `<div class="bulatan">${opt}</div>`;
+                });
+                colHTML += `</div></div>`;
+            }
+            colHTML += `</div>`;
+            jawabanContainer.innerHTML += colHTML;
+        }
+    </script>
+</body>
+</html>
