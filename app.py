@@ -258,7 +258,7 @@ tab1, tab2 = st.tabs(["📸 Kamera", "📁 Unggah File"])
 image_data = None
 
 with tab1:
-    camera_file = st.camera_input("Ambil Foto LJK")
+    camera_file = st.camera_input("Ambil Foto LJK", resolution="1080p")
     if camera_file is not None:
         image_data = camera_file
 
