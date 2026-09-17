@@ -222,6 +222,14 @@ st.title("Sistem Koreksi LJK Otomatis (60 Soal)")
 # ================= SIDEBAR: KUNCI JAWABAN =================
 st.sidebar.header("⚙️ Konfigurasi")
 csv_file = st.sidebar.file_uploader("1. Unggah CSV Kunci Jawaban", type=["csv"])
+# ================= SIDEBAR: BOBOT NILAI ==============
+st.sidebar.markdown("---")
+st.sidebar.header("⚖️ Pengaturan Bobot Nilai")
+bobot_benar = st.sidebar.number_input("Poin jika BENAR", value=1.0, step=0.5, format="%.1f")
+bobot_salah = st.sidebar.number_input("Poin jika SALAH", value=0.0, step=0.5, format="%.1f")
+bobot_kosong = st.sidebar.number_input("Poin jika KOSONG", value=0.0, step=0.5, format="%.1f")
+st.sidebar.info("💡 Tip: Gunakan angka minus (misal -1) pada kolom SALAH untuk menerapkan sistem penalti UTBK/SNBT.")
+# ------------------------------------------------
 
 kunci_df = None
 if csv_file is not None:
@@ -294,8 +302,10 @@ if image_data is not None:
                 jumlah_salah = len(hasil_df[hasil_df["Status"] == "Salah"])
                 jumlah_kosong = len(hasil_df[hasil_df["Status"] == "Kosong"])
                 
-                # Rumus Skor Skala 100
-                skor_akhir = (jumlah_benar / total_soal) * 100
+                # --- RUMUS SKOR DINAMIS BARU ---
+                # Hitung akumulasi poin berdasarkan input di sidebar
+                skor_akhir = (jumlah_benar * bobot_benar) + (jumlah_salah * bobot_salah) + (jumlah_kosong * bobot_kosong)
+                skor_maksimal = total_soal * bobot_benar # Asumsi poin maksimal didapat jika benar semua
 
                 st.divider()
                 
@@ -312,7 +322,7 @@ if image_data is not None:
                 
                 # Menampilkan Score Card
                 col_score1, col_score2, col_score3, col_score4 = st.columns(4)
-                #col_score1.metric("SKOR AKHIR", f"{skor_akhir:.2f}")
+                col_score1.metric("SKOR AKHIR", f"{skor_akhir:.2f}")
                 col_score2.metric("Benar", jumlah_benar)
                 col_score3.metric("Salah", jumlah_salah)
                 col_score4.metric("Kosong", jumlah_kosong)
