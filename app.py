@@ -223,14 +223,6 @@ st.title("Sistem Koreksi LJK Otomatis (60 Soal)")
 st.sidebar.header("⚙️ Konfigurasi")
 csv_file = st.sidebar.file_uploader("1. Unggah CSV Kunci Jawaban", type=["csv"])
 
-# --- SIDEBAR : TEMPLATE ---
-st.sidebar.subheader("📥 Download Template")
-st.sidebar.write("Belum punya formatnya? Unduh template LJK dan Kunci Jawaban di bawah ini:")
-
-# Menggunakan format tombol link (lebih rapi dan modern)
-st.sidebar.link_button("📄 Template LJK (HTML)", "https://github.com/maulanalmifa/exam-scanner-60/blob/5dc98daf0153bc3b19c99bd0e27b2d34599ec4d8/template-ljk-60.html", use_container_width=True)
-st.sidebar.link_button("📊 Template Kunci (CSV)", "https://github.com/maulanalmifa/exam-scanner-60/blob/5dc98daf0153bc3b19c99bd0e27b2d34599ec4d8/kunci.csv", use_container_width=True)
-
 # ================= SIDEBAR: BOBOT NILAI ==============
 st.sidebar.markdown("---")
 st.sidebar.header("⚖️ Pengaturan Bobot Nilai")
@@ -238,6 +230,14 @@ bobot_benar = st.sidebar.number_input("Poin jika BENAR", value=1.0, step=0.5, fo
 bobot_salah = st.sidebar.number_input("Poin jika SALAH", value=0.0, step=0.5, format="%.1f")
 bobot_kosong = st.sidebar.number_input("Poin jika KOSONG", value=0.0, step=0.5, format="%.1f")
 st.sidebar.info("💡 Tip: Gunakan angka minus (misal -1) pada kolom SALAH untuk menerapkan sistem penalti UTBK/SNBT.")
+
+# --- SIDEBAR : TEMPLATE ---
+st.sidebar.subheader("📥 Download Template")
+st.sidebar.write("Belum punya formatnya? Unduh template LJK dan Kunci Jawaban di bawah ini:")
+
+# Menggunakan format tombol link (lebih rapi dan modern)
+st.sidebar.link_button("📄 Template LJK (HTML)", "https://github.com/maulanalmifa/exam-scanner-60/blob/5dc98daf0153bc3b19c99bd0e27b2d34599ec4d8/template-ljk-60.html", use_container_width=True)
+st.sidebar.link_button("📊 Template Kunci (CSV)", "https://github.com/maulanalmifa/exam-scanner-60/blob/5dc98daf0153bc3b19c99bd0e27b2d34599ec4d8/kunci.csv", use_container_width=True)
 # ------------------------------------------------
 
 kunci_df = None
