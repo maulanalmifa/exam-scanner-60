@@ -53,7 +53,7 @@ def four_point_transform(image, pts):
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 
     return warped
-'''
+
 def detect_and_warp(image_array):
     """
     Mendeteksi 4 marker sudut dan meratakan lembar jawaban.
@@ -104,89 +104,7 @@ def detect_and_warp(image_array):
         return debug_image, warped_image, True
     else:
         return image_array, None, False
-'''
-#Coba fungsi detect_and_warp yang dioptimalisasi
-def detect_and_warp(image_array):
-    """
-    Mendeteksi 4 marker menggunakan Adaptive Threshold & RETR_LIST
-    """
-    height, width = image_array.shape[:2]
-    ratio = 1000.0 / height
-    resized_img = cv2.resize(image_array, (int(width * ratio), 1000))
-    
-    gray = cv2.cvtColor(resized_img, cv2.COLOR_RGB2GRAY)
-    
-    # 1. BLUR LEBIH KUAT
-    # Menghapus noise bintik-bintik dari resolusi kamera web/HP
-    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
-    
-    # 2. ADAPTIVE THRESHOLD (KUNCI UTAMA)
-    # block_size=51: Mesin melihat area 51x51 pixel untuk menentukan terang/gelap
-    # C=10: Mengurangi noise dari bayangan tipis
-    thresh = cv2.adaptiveThreshold(
-        blurred, 255, 
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, 
-        51, 10
-    )
-    
-    # Tambahkan Morphological untuk menebalkan kotak marker
-    kernel = np.ones((3,3), np.uint8)
-    thresh = cv2.dilate(thresh, kernel, iterations=1)
-    
-    # 3. RETR_LIST (Bukan RETR_EXTERNAL)
-    # Memaksa OpenCV mencari SEMUA kotak, meskipun berada di dalam bingkai kertas
-    contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    
-    possible_markers = []
-    for c in contours:
-        peri = cv2.arcLength(c, True)
-        # Toleransi bentuk diperbesar (karena lensa kamera cembung)
-        approx = cv2.approxPolyDP(c, 0.05 * peri, True)
-        
-        if len(approx) == 4:
-            (x, y, w, h) = cv2.boundingRect(approx)
-            aspect_ratio = w / float(h)
-            area = cv2.contourArea(c)
-            
-            # Toleransi kemiringan lensa (0.5 sampai 1.5)
-            # Area diubah minimal 300 pixel agar debu tidak terbaca
-            if 0.5 <= aspect_ratio <= 1.5 and 300 < area < 20000:
-                possible_markers.append(c)
-
-    # Copy untuk visualisasi
-    debug_image = resized_img.copy()
-    
-    # Urutkan dari yang terbesar ke terkecil
-    possible_markers = sorted(possible_markers, key=cv2.contourArea, reverse=True)
-    
-    if len(possible_markers) >= 4:
-        # Ambil 4 terbesar
-        top_4 = possible_markers[:4]
-        markers = []
-        
-        for c in top_4:
-            M = cv2.moments(c)
-            if M["m00"] != 0:
-                cX = int(M["m10"] / M["m00"])
-                cY = int(M["m01"] / M["m00"])
-                markers.append([cX, cY])
-                cv2.circle(debug_image, (cX, cY), 20, (0, 255, 0), -1)
-                cv2.drawContours(debug_image, [c], -1, (255, 0, 0), 3) # Gambar garis biru di kotaknya
-        
-        pts = np.array(markers, dtype="float32")
-        
-        try:
-            warped_image = four_point_transform(resized_img, pts)
-            return debug_image, warped_image, True
-        except Exception:
-            return debug_image, None, False
-    else:
-        # Jika gagal, kita bisa mereturn gambar 'thresh' sebagai debug agar Anda bisa melihat 
-        # apa yang dilihat oleh komputer
-        # (Ubah 'debug_image' menjadi 'thresh' di bawah ini jika Anda ingin melihat hasil biner-nya)
-        return debug_image, None, False
-        
+ 
 def process_answers(warped_img):
     """
     Mengekstrak bulatan jawaban secara berurutan dan membaca pilihan siswa.
