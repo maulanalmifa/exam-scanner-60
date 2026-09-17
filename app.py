@@ -135,7 +135,7 @@ def process_answers(warped_img):
         
         # Filter ketat: Hanya ambil bulatan OMR yang valid
         if 15 <= w <= 32 and 15 <= h <= 32 and 0.8 <= aspect_ratio <= 1.2:
-            if 300 <= area <= 900:
+            if 600 <= area <= 900:
                 bubbles.append(c)
                 
     # Validasi: Wajib menemukan tepat 300 bulatan (60 soal x 5 opsi)
